@@ -29,6 +29,7 @@ namespace Server
                 bool isFile = false;
                 string extension = String.Empty;
                 string command = String.Empty;
+                string userName = String.Empty;
                 try
                 {
                     do
@@ -60,21 +61,29 @@ namespace Server
 
                         if (sb.Length > 0)
                         {
+                            if (sb.ToString().Contains("UN|")) 
+                            { 
+                                userName = sb.ToString().Substring(sb.ToString().IndexOf('|')+1, (sb.Length-1) - sb.ToString().IndexOf('|'));
+                                sb.Clear();
+                                continue;
+                            }
+
                             if (sb[0].Equals('.'))
                             {
                                 extension = sb.ToString();
                                 isFile = true;
 
-                                CreateStream(extension);
+                                CreateStream(extension,userName);
                             }
 
                             if (sb[0].Equals('-'))
-                            {
                                 command = sb.ToString();
-                            }
+
                             if (!sb[0].Equals('.'))
                                 if (File.Exists(pathForHistory))
-                                    File.AppendAllText(pathForHistory, sb.ToString() + "\n");
+                                    File.AppendAllText(pathForHistory, $"{userName} send msg {sb.ToString()}\n");
+                                else
+                                    File.WriteAllText(pathForHistory, $"{userName} send msg {sb.ToString()}\n");
                             sb.Clear();
                         }
 
@@ -105,14 +114,30 @@ namespace Server
                     fs.Close();
             }
         }
-        private static void CreateStream(string extension)
+        private static void CreateStream(string extension,string userName)
         {
             string path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"/Server";
-            string ip = iPEnd.Address.ToString().Replace('.', ';');
-            string file = ip + "_" + DateTime.Now.Ticks + extension;
+            bool isHas = false;
+
+            foreach (var item in Directory.GetDirectories(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)))
+            {
+                if(item.Equals("Server"))
+                {
+                    isHas = true;
+                    break;
+                }
+            }
+            if (!isHas)
+            {
+                Directory.CreateDirectory(path);
+            }
+            Console.ReadLine();
+            string file = userName + "_" + DateTime.Now.Ticks + extension;
 
             if (File.Exists(pathForHistory))
-                File.AppendAllText(pathForHistory, $"Send file {file}\n");
+                File.AppendAllText(pathForHistory, $"{userName} send file {file}\n");
+            else
+                File.WriteAllText(pathForHistory, $"{userName} send file {file}\n");
 
             fs = new FileStream(Path.Combine(path, file), FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None);
         }

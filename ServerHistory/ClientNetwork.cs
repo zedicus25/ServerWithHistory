@@ -16,8 +16,10 @@ namespace ServerHistory
         private const string IP_ADDR = "127.0.0.1";
         private IPEndPoint iPEnd;
         private Socket socket;
+        private string userName;
         public ClientNetwork()
         {
+            userName = $"UN|{Environment.UserName}";
             iPEnd = new IPEndPoint(IPAddress.Parse(IP_ADDR), PORT);
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             socket.Connect(iPEnd);
@@ -32,6 +34,9 @@ namespace ServerHistory
                 try
                 {
                     byte[] byteData;
+                    byteData = Encoding.Unicode.GetBytes(userName);
+                    socket.Send(byteData);
+                    Thread.Sleep(1000);
                     if (isFile)
                     {
                         string extension = data.Substring(data.LastIndexOf('.'), data.Length - data.LastIndexOf('.'));
