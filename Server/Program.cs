@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -80,10 +78,7 @@ namespace Server
                                 command = sb.ToString();
 
                             if (!sb[0].Equals('.'))
-                                if (File.Exists(pathForHistory))
-                                    File.AppendAllText(pathForHistory, $"{userName} send msg {sb.ToString()}\n");
-                                else
-                                    File.WriteAllText(pathForHistory, $"{userName} send msg {sb.ToString()}\n");
+                                WriteHistory(userName, sb.ToString());
                             sb.Clear();
                         }
 
@@ -117,27 +112,13 @@ namespace Server
         private static void CreateStream(string extension,string userName)
         {
             string path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + @"/Server";
-            bool isHas = false;
 
-            foreach (var item in Directory.GetDirectories(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)))
-            {
-                if(item.Equals("Server"))
-                {
-                    isHas = true;
-                    break;
-                }
-            }
-            if (!isHas)
-            {
+            if (HasDirectory("Server") == false)
                 Directory.CreateDirectory(path);
-            }
-            Console.ReadLine();
+
             string file = userName + "_" + DateTime.Now.Ticks + extension;
 
-            if (File.Exists(pathForHistory))
-                File.AppendAllText(pathForHistory, $"{userName} send file {file}\n");
-            else
-                File.WriteAllText(pathForHistory, $"{userName} send file {file}\n");
+            WriteHistory(userName, file);
 
             fs = new FileStream(Path.Combine(path, file), FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None);
         }
@@ -147,6 +128,26 @@ namespace Server
             if (fs == null)
                 return;
             fs.Write(data, 0, count);
+        }
+
+        private static void WriteHistory(string userName, string msg)
+        {
+            if (File.Exists(pathForHistory))
+                File.AppendAllText(pathForHistory, $"{userName} send {msg}\n");
+            else
+                File.WriteAllText(pathForHistory, $"{userName} send {msg}\n");
+        }
+
+        private static bool HasDirectory(string directory)
+        {
+            foreach (var item in Directory.GetDirectories(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)))
+            {
+                if (item.Equals(directory))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
